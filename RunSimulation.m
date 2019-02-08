@@ -19,7 +19,7 @@ tmax = 21;
 nmax = 200;
 t = linspace(0, tmax, nmax);
 simin.time = t;
-simin.signals.values = -300*ones(nmax,1);
+simin.signals.values = [-300*ones(nmax/2,1); zeros(nmax/2,1)];
 
 sim('Simulation.slx')
 %% Set up for Kalman Filter
@@ -92,7 +92,7 @@ xlabel('t')
 %
 subplot(322)
 plot(simout.time, simout.Data(:,5:6))
-legend('F_res', 'F_t/db')
+legend('F_{res}', 'F_{t/db}')
 ylabel('F')
 %
 subplot(324)
