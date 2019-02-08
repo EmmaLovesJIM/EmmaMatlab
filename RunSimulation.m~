@@ -4,7 +4,6 @@ mL = 650;
 mWz = 1200;
 v0 = 10/3.6;
 s0 = 0;
-Ts = 0.05;
 Pres = 1/1000*[5.7/771 0 1.6]; %Strahl formula for m/s velocity
 i = -5/1000; %Gradient, uphill positive
 %System model
@@ -12,8 +11,8 @@ i = -5/1000; %Gradient, uphill positive
 %sysSSc = ss(sys);
 A = [0 1; 0 -0.06/(mL+mWz)]; B = [0;1/(mL+mWz)]; C = [1 0];
 sysSSc = ss(A, B, C, []);
-sysSS = c2d(sysSSc, Ts);
-%Ts = sysSS.Ts;
+sysSS = c2d(sysSSc, 0.1);
+Ts = sysSS.Ts;
 
 
 
@@ -22,15 +21,13 @@ tmax = 21;
 nmax = 200;
 t = linspace(0, tmax, nmax);
 simin.time = t;
-simin.signals.values = [-300*ones(nmax,1)];
+simin.signals.values = [-300*ones(nmax/2,1); zeros(nmax/2,1)];
 
 sim('Simulation.slx')
 %% Set up for Kalman Filter
-sigma = .1; % Noise variance
-u = simoutD.Data(:,5);
-y0 = simoutD.Data(:,2);
-y = y0+sigma*randn(size(y0)); %Systematic offset +.5*linspace(v0,0,length(u))';
-x0 = simoutD.Data(:,3);
+u = simout.Data(:,5);
+y0 = simout.Data(:,2);
+y = y0+randn(size(y0));
 A = sysSS.A;
 B = sysSS.B;
 C = sysSS.C';
@@ -38,10 +35,10 @@ C = [0;1];
 n = length(sysSS.A);
 N = length(y);
 % Set up the matrices and vectors for Kalman filter
-x = [0;v0];
-P = eye(n)*1e-3;
+x = [0;0];
+P = eye(n)*1e3;
 % Noise information
-rv = sigma;  Rw = 1e-6*eye(n); xSave=[];
+rv = 10;  Rw = 1e-6*eye(n); xSave=[];
 
 for t= 2:N
 %	Kalman filter for state estimation
@@ -59,8 +56,8 @@ end
 
 L = 2;
 
-xest = xSave(1,:);
-vest = xSave(2,:);
+xest = xSave(:,1);
+vest = xSave(:,2);
 tplot = linspace(0, tmax, N);
 
 figure
@@ -69,21 +66,17 @@ plot(tplot,y, 'LineWidth', L);
 hold on
 plot(tplot(2:end), vest,'LineWidth', L)
 plot(tplot,y0, 'LineWidth', L)
-plot(tplot(2:end), vest - y0(2:end)', 'LineWidth', L)
-%xlabel('t/s')
-ylabel('Velocity')
-legend('v_{meas}', 'v_{est}', 'v_{true}', 'Delta');
-grid on
+xlabel('Iterations')
+ylabel('System response')
+legend('x_{meas}', 'x_{est}', 'x_{true}');
 subplot(212)
-%plot(tplot,y, 'LineWidth', L);
+plot(tplot,y, 'LineWidth', L);
 hold on
 plot(tplot(2:end), xest,'LineWidth', L)
-plot(tplot,x0, 'LineWidth', L)
-plot(tplot(2:end), xest - x0(2:end)', 'LineWidth', L)
-xlabel('t/s')
-ylabel('Position')
-legend('x_{est}', 'x_{true}', 'Delta');
-grid on
+plot(tplot,y0, 'LineWidth', L)
+xlabel('Iterations')
+ylabel('System response')
+legend('x_{meas}', 'x_{est}', 'x_{true}');
 
 
 %% Plot
