@@ -18,11 +18,12 @@ sysSS = c2d(sysSSc, Ts);
 
 
 %% Run Simulation
-tmax = 21;
+tmax = 120;
 nmax = 200;
 t = linspace(0, tmax, nmax);
+u = 300*idinput(nmax);
 simin.time = t;
-simin.signals.values = [-300*ones(nmax,1)];
+simin.signals.values = u;%[-300*ones(nmax,1)];
 
 sim('Simulation.slx')
 %% Set up for Kalman Filter
@@ -41,7 +42,16 @@ N = length(y);
 x = [0;v0];
 P = eye(n)*1e-3;
 % Noise information
-rv = sigma;  Rw = 1e-6*eye(n); xSave=[];
+rv = sigma;  Rw = 1e-6*eye(n); xSave=[0;0];
+
+% RLS setup
+nRLS = 1;
+xRLS = zeros(nRLS,1);
+theta = [1/(mL+mWz)];
+thetaSave = [];
+
+% Set up the covariance matrix
+PRLS = 1e8*eye(nRLS);
 
 for t= 2:N
 %	Kalman filter for state estimation
@@ -55,16 +65,30 @@ for t= 2:N
 	x = x + K*(y(t) - C'*x); % x^(t+1|t+1) = x^(t+1|t) + K(t+1) [y(t+1) - H x^(t+1|t)]
 	P = (eye(n) - K*C')*P; % phi(t+1|t+1) = [I - K(t) H] phi(t+1|t)
     xSave=[xSave, x];
+    
+    % RLS for parameter estimation 
+    if abs(u) > 0
+        a = xSave(1,t-1) - xSave(2,t);
+    % Observation vector
+        xRLS(1) = u(t-1)/a;
+    
+    
+        PRLS = PRLS - PRLS*xRLS*((1 + xRLS'*PRLS*xRLS)^(-1))*xRLS'*PRLS;
+        theta = theta + PRLS*xRLS*(y(t) - xRLS'*theta);
+    end
+    thetaSave = [thetaSave, theta];
+ 
 end
 
 L = 2;
 
-xest = xSave(1,:);
-vest = xSave(2,:);
+xest = xSave(1,2:end);
+vest = xSave(2,2:end);
 tplot = linspace(0, tmax, N);
+mest = -1*thetaSave.^(-1);
 
 figure
-subplot(211)
+subplot(5,1,1:2)
 plot(tplot,y, 'LineWidth', L);
 hold on
 plot(tplot(2:end), vest,'LineWidth', L)
@@ -74,7 +98,7 @@ plot(tplot(2:end), vest - y0(2:end)', 'LineWidth', L)
 ylabel('Velocity')
 legend('v_{meas}', 'v_{est}', 'v_{true}', 'Delta');
 grid on
-subplot(212)
+subplot(5,1,3:4)
 %plot(tplot,y, 'LineWidth', L);
 hold on
 plot(tplot(2:end), xest,'LineWidth', L)
@@ -84,6 +108,14 @@ xlabel('t/s')
 ylabel('Position')
 legend('x_{est}', 'x_{true}', 'Delta');
 grid on
+subplot(515)
+plot(tplot(2:end), mest, 'LineWidth', L)
+hold on
+plot(tplot([1,end]), [mL+mWz, mL+mWz], 'LineWidth', L)
+ylim([0,10000])
+legend('m_{est}', 'm_{true}')
+grid on
+
 
 
 %% Plot
