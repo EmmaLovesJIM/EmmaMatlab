@@ -4,7 +4,7 @@ mL = 650;
 mWz = 1200;
 v0 = 10/3.6;
 s0 = 0;
-Ts = 0.05;
+Ts = 0.01;
 Pres = 1/1000*[5.7/771 0 1.6]; %Strahl formula for m/s velocity
 i = -5/1000; %Gradient, uphill positive
 %System model
@@ -18,16 +18,16 @@ sysSS = c2d(sysSSc, Ts);
 
 
 %% Run Simulation
-tmax = 120;
+tmax = 20;
 nmax = 200;
 t = linspace(0, tmax, nmax);
 u = 300*idinput(nmax);
 simin.time = t;
-simin.signals.values = u;%[-300*ones(nmax,1)];
+simin.signals.values = [-300*ones(nmax,1)];
 
 sim('Simulation.slx')
 %% Set up for Kalman Filter
-sigma = .1; % Noise variance
+sigma = 0; % Noise variance
 u = simoutD.Data(:,5);
 y0 = simoutD.Data(:,2);
 y = y0+sigma*randn(size(y0)); %Systematic offset +.5*linspace(v0,0,length(u))';
@@ -42,7 +42,7 @@ N = length(y);
 x = [0;v0];
 P = eye(n)*1e-3;
 % Noise information
-rv = sigma;  Rw = 1e-6*eye(n); xSave=[0;0];
+rv = 0.1;  Rw = 1e-6*eye(n); xSave=[0;0];
 
 % RLS setup
 nRLS = 1;
