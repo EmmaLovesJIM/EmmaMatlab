@@ -6,7 +6,7 @@ v0 = 10/3.6;
 s0 = 0;
 Ts = 0.01;
 Pres = 1/1000*[5.7/771 0 1.6]; %Strahl formula for m/s velocity
-i = -5/1000; %Gradient, uphill positive
+i = 0%-5/1000; %Gradient, uphill positive
 %System model
 %sys = tf([1/(mL+mWz)], [1 0.01/(mL+mWz) 0]);
 %sysSSc = ss(sys);
@@ -42,7 +42,7 @@ N = length(y);
 x = [0;v0];
 P = eye(n)*1e-3;
 % Noise information
-rv = 0.1;  Rw = 1e-6*eye(n); xSave=[0;0];
+rv = 0.1;  Rw = 1e-2*eye(n); xSave=[0;0];
 
 % RLS setup
 nRLS = 1;
@@ -85,7 +85,7 @@ L = 2;
 xest = xSave(1,2:end);
 vest = xSave(2,2:end);
 tplot = linspace(0, tmax, N);
-mest = -1*thetaSave.^(-1);
+mest = thetaSave.^(-1);
 
 figure
 subplot(5,1,1:2)
@@ -109,10 +109,10 @@ ylabel('Position')
 legend('x_{est}', 'x_{true}', 'Delta');
 grid on
 subplot(515)
-plot(tplot(2:end), mest, 'LineWidth', L)
+plot(tplot(2:end), -1*mest, 'LineWidth', L)
 hold on
 plot(tplot([1,end]), [mL+mWz, mL+mWz], 'LineWidth', L)
-ylim([0,10000])
+ylim([0,5000])
 legend('m_{est}', 'm_{true}')
 grid on
 
