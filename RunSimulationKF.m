@@ -1,8 +1,8 @@
 %% Initialise
 clear all, close all, clc
 mL = 650;
-mWz = 1200;
-v0 = 10/3.6;
+mWz = 1400;
+v0 = 12/3.6;
 s0 = 0;
 Ts = 0.01;
 Pres = 1/1000*[5.7/771 0 1.6]; %Strahl formula for m/s velocity
@@ -18,7 +18,7 @@ sysSS.C = [0,1];
 n = 2;
 P = eye(n)*1e3;
 rv = 20;
-smax = 20;
+smax = 25;
 Kp = 600;
 Ki = 20;
 P1 = 1e-1;
