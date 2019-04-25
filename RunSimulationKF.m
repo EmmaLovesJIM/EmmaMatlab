@@ -1,10 +1,10 @@
 %% Initialise
 clear all, close all, clc
 mL = 650;
-mWz = 1400;
+mWz = 1200;
 v0 = 12/3.6;
 s0 = 0;
-Ts = 0.01;
+Ts = 0.015;
 Pres = 1/1000*[5.7/771 0 1.6]; %Strahl formula for m/s velocity
 i = -5/1000; %Gradient, uphill positive
 %System model
@@ -14,21 +14,31 @@ A = [0 1; 0 -0.06/(mL+mWz)]; B = [0;1/(mL+mWz)]; C = [1 0];
 sysSSc = ss(A, B, C, []);
 sysSS = c2d(sysSSc, Ts);
 sysSS.C = [0,1];
-%Ts = sysSS.Ts;
+%Ts = sysSS.Ts
 n = 2;
-P = eye(n)*1e3;
-rv = 20;
+
+
+% Braking parameters
+mumax = 0.15;
 smax = 25;
-Kp = 600;
-Ki = 20;
-P1 = 1e-1;
+soffset = 0.2;
+% Controller parameters
+%pmax: 3500
+Kp = 0.2*3500;
+Ki = 50;
+% Noise parameters
+P1 =0e-2;
 P2 = 0;
-%Rw = 1*[P2 0; 0 P1];
+% Kalman filter parameters
 Rw = [1e-3 0; 0, 1e-3];
 P = eye(n)*1e-3;
+rv = 20;
+% Pre-braking parameters
+alpha = 2;
+beta = -.2;
 
 %% Run Simulation
-tmax = 20;
+tmax = 25;
 nmax = 200;
 t = linspace(0, tmax, nmax);
 u = 300*idinput(nmax);
@@ -47,7 +57,7 @@ y = simout.Data(:,2);
 %mest = thetaSave.^(-1);
 
 figure
-subplot(5,1,1)
+subplot(3,2,1)
 plot(simout.Time,simout.Data(:,2), 'LineWidth', L);
 hold on
 plot(tplot, vest,'LineWidth', L)
@@ -58,7 +68,7 @@ ylim([0 ceil(v0)])
 ylabel('Velocity')
 legend('v_{true}', 'v_{est}', 'v_{obs}');
 grid on
-subplot(5,1,2)
+subplot(3,2,2)
 %plot(tplot,y, 'LineWidth', L);
 hold on
 plot(tplot, xest,'LineWidth', L)
@@ -68,7 +78,13 @@ xlabel('t/s')
 ylabel('Position')
 legend('x_{est}', 'x_{true}');
 grid on
-subplot(5,1,3:4)
+subplot(3,2,3)
+plot(simout.Data(:,3), simout.Data(:,5)/(-10*mL), 'LineWidth', L)
+ylabel('\mu')
+xlabel('s/m')
+ylim([0 0.25])
+grid on
+subplot(3,2,[4,6])
 %plot(tplot,y, 'LineWidth', L);
 hold on
 plot(xest, vest,'LineWidth', L)
@@ -80,10 +96,13 @@ ylim([0 ceil(v0)])
 legend('bc_{est}', 'bc_{true}');
 title(['Braking distance ', num2str(max(simout.Data(:,3))), ' m'])
 grid on
-subplot(5,1,5)
-plot(simout.Data(:,3), simout.Data(:,5)/(-10*mL), 'LineWidth', L)
-ylabel('\mu')
+subplot(3,2,5)
+plot(simout.Data(:,3), simout.Data(:,[1,6:7]), 'LineWidth', L)
+ylabel('a')
 xlabel('s/m')
+legend('a_{true}', 'a_{est}', 'a_{req}');
+ylim([-1,0])
+grid on
 
 
 
