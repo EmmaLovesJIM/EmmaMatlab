@@ -7,6 +7,7 @@ s0 = 0;
 Ts = 0.015;
 Pres = 1/1000*[5.7/771 0 1.6]; %Strahl formula for m/s velocity
 i = -5/1000; %Gradient, uphill positive
+ssigma = 1e-1; % Slip at 68% of mumax, e.g. dry: 1%, wet: 10%
 %System model
 %sys = tf([1/(mL+mWz)], [1 0.01/(mL+mWz) 0]);
 %sysSSc = ss(sys);
@@ -21,7 +22,7 @@ n = 2;
 % Braking parameters
 mumax = 0.15;
 smax = 25;
-soffset = 0.2;
+soffset = 0;
 % Controller parameters
 %pmax: 3500
 Kp = 0.2*3500;
@@ -45,7 +46,7 @@ u = 300*idinput(nmax);
 simin.time = t;
 simin.signals.values = [-300*ones(nmax,1)];
 
-sim('SimulationKF.slx')
+sim('SimulationKFslip.slx')
 %% Plot
 L = 2;
 
