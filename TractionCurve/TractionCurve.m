@@ -1,6 +1,6 @@
 clear all, close all, %clc
 
-I = 50; %A
+I = 57.9; %A
 U = 50; %V
 
 mu = 0.4;
